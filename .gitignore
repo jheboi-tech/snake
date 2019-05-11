@@ -1,5 +1,5 @@
 # Will not include the virtual environment folder.
 # This is up to YOU to install it. 
 venv/
-.idea/
+.idea/*
 
