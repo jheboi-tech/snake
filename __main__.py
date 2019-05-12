@@ -4,11 +4,33 @@ The entry-point for the Snake game written in python.
 Developed by JHEBOI Tech.
 """
 
+# Additional required modules
+
+import pygame
+
+# define a main function
 def main():
     """
     The entry point for this solution.
     :return:    Nothing.
     """
+    # initialize the pygame module
+    pygame.init()
+
+    # initialize screen and size
+    screen = pygame.display.set_mode((640, 480))
+
+    # define variable to control main loop
+    running = True
+
+    # main loop
+    while running:
+        # event handler, gets all events from queue
+        for event in pygame.event.get():
+            # quit event to exit loop
+            if event.type == pygame.QUIT:
+                running = False
+
     if __debug__:
         # Anything inside this if statement and others after it will only be run
         # if the python program is in debug mode. To run this program so that these
