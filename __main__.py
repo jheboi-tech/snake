@@ -17,6 +17,12 @@ def main():
     # initialize the pygame module
     pygame.init()
 
+    #set logo
+    logo = pygame.image.load("JHE_logo.png")
+    pygame.display.set_icon(logo)
+    # set caption text
+    pygame.display.set_caption("JHEBOI SNAKE")
+
     # initialize screen and size
     screen = pygame.display.set_mode((640, 480))
 
