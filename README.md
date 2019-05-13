@@ -12,6 +12,8 @@ To view the package dependencies, see `./requirements.txt`.
 This game will be developed with Kivy. Documentation on Kivy
 can be found [here](https://kivy.org/doc/stable/). 
 
+For installation for windows, see [here](https://kivy.org/doc/stable/installation/installation-windows.html).
+
 ### Git bash
 
 If you are on windows, it is very likely that you will be 
