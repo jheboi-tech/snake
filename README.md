@@ -5,6 +5,8 @@ Using python to make snake. How appropriate
 
 To view the package dependencies, see `./requirements.txt`.
 
+This game is based off the [tutorial](https://www.digitaljunky.io/make-a-snake-game-for-android-written-in-python-part-2/) by Alexis Matelin.
+
 ## Info for you developers
 
 ### Kivy Documentation
