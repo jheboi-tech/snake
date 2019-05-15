@@ -29,6 +29,7 @@ _KEY_DOWN = (274, 81)
 class Playground(Widget):
     """Children widgets containers."""
     fruit = ObjectProperty(None)
+    death_fruit = ObjectProperty(None)
     snake = ObjectProperty(None)
 
     # Grid Parameters
@@ -82,6 +83,7 @@ class Playground(Widget):
 
         self.snake.remove()
         self.fruit.remove()
+        self.death.remove()
 
     def new_snake(self):
         start_coord = (
@@ -111,10 +113,30 @@ class Playground(Widget):
 
         self.fruit.pop(random_coord)
 
+    def pop_death_fruit(self, *args):
+        random_coord = [
+            randint(1, self.col_number), randint(1, self.row_number)
+        ]
+
+        snake_space = self.snake.get_full_position()
+
+        # if the coordinates are on a cell occupied by the snake, re-draw.
+        while random_coord in snake_space:
+            random_coord = [
+                randint(2, self.col_number - 1), randint(2, self.row_number - 1)
+            ]
+
+        self.death.pop(random_coord)
+
+
     def is_defeated(self):
         snake_position = self.snake.get_position()
+        death_position = self.death.get_position()
 
         if snake_position in self.snake.tail.blocks_positions:
+            return True
+
+        if death_position in self.snake.tail.blocks_positions:
             return True
 
         if (
@@ -144,6 +166,7 @@ class Playground(Widget):
                 self.snake.tail.size += 1
         else:
             self.pop_fruit()
+            self.pop_death_fruit()
 
         # Increment turn counter.
         self.turn_counter += 1
@@ -336,6 +359,7 @@ class DeathFruit(Widget):
         self.pos = pos
 
         with self.canvas:
+            Color (0, 255, 0)
             x = (pos[0] - 1) * self.size[0]
             y = (pos[1] - 1) * self.size[1]
             coord = (x, y)
@@ -343,6 +367,9 @@ class DeathFruit(Widget):
             # storing the representation and update the state of the object
             self.object_on_board = Ellipse(pos=coord, size=self.size)
             self.state = True
+
+    def get_position(self):
+        return self.pos
 
 
 class SnakeApp(App):
