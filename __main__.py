@@ -21,19 +21,30 @@ from kivy.core.window import Window
 
 _INITIAL_LENGTH = 3
 
+# In FPS
+_REFRESH_RATE_NORMAL = 5
+_REFRESH_RATE_FAST = 10
+_REFRESH_PERIOD_NORMAL = 1 / _REFRESH_RATE_NORMAL
+_REFRESH_PERIOD_FAST = 1 / _REFRESH_RATE_FAST
+
 _KEY_LEFT = (276, 80)
 _KEY_UP = (273, 82)
 _KEY_RIGHT = (275, 79)
 _KEY_DOWN = (274, 81)
+_KEY_SPACE = (32, 44)
+
 
 class Playground(Widget):
     """Children widgets containers."""
     fruit = ObjectProperty(None)
     snake = ObjectProperty(None)
 
+    # Speed up
+    speed_up = BooleanProperty(False)
+
     # Grid Parameters
-    col_number = 16
-    row_number = 9
+    col_number = 100
+    row_number = 100
 
     # Game variables
     score = NumericProperty(0)
@@ -51,12 +62,17 @@ class Playground(Widget):
 
     def _keyup(self, *args):
         signature = args[1:3]
-        key = self._get_key_press(signature)
+        if signature == _KEY_SPACE:
+            self.speed_up = False
 
     def _keydown(self, *args):
         signature = args[1:3]
-        key = self._get_key_press(signature)
-        self.snake.set_direction(key)
+        if signature == _KEY_SPACE:
+            self.speed_up = True
+        else:
+            key = self._get_key_press(signature)
+            if key != '':
+                self.snake.set_direction(key)
 
     def _get_key_press(self, signature):
         if signature == _KEY_UP:
@@ -69,6 +85,8 @@ class Playground(Widget):
             return "Right"
         else:
             return ""
+
+
 
     def start(self):
         self.new_snake()
@@ -148,7 +166,8 @@ class Playground(Widget):
         # Increment turn counter.
         self.turn_counter += 1
 
-        Clock.schedule_once(self.update, 0.2)
+        # If space bar is pressed, speed up the refresh rate.
+        Clock.schedule_once(self.update, _REFRESH_PERIOD_FAST if self.speed_up else _REFRESH_PERIOD_NORMAL)
 
 
 class Snake(Widget):
