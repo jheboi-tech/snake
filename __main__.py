@@ -34,6 +34,7 @@ _KEY_DOWN = (274, 81)
 _KEY_SPACE = (32, 44)
 
 
+
 class Playground(Widget):
     """Children widgets containers."""
     fruit = ObjectProperty(None)
@@ -71,8 +72,18 @@ class Playground(Widget):
             self.speed_up = True
         else:
             key = self._get_key_press(signature)
-            if key != '':
+            prev_key = self.snake.get_direction()
+
+            if (key == "Left") and (self.snake.get_previous_direction() != "Right"):
                 self.snake.set_direction(key)
+            elif (key == "Right") and (self.snake.get_previous_direction() != "Left"):
+                self.snake.set_direction(key)
+            elif (key == "Up") and (self.snake.get_previous_direction() != "Down"):
+                self.snake.set_direction(key)
+            elif (key == "Down") and (self.snake.get_previous_direction() != "Up"):
+                self.snake.set_direction(key)
+
+            self.snake.set_previous_direction(prev_key)
 
     def _get_key_press(self, signature):
         if signature == _KEY_UP:
@@ -111,8 +122,9 @@ class Playground(Widget):
         rand_index = randint(0, 3)
         start_direction = ["Up", "Down", "Left", "Right"][rand_index]
 
-        # Set random direction.
+        # Set previous and current direction.
         self.snake.set_direction(start_direction)
+        self.snake.set_previous_direction(start_direction)
 
     def pop_fruit(self, *args):
         random_coord = [
@@ -197,14 +209,23 @@ class Snake(Widget):
         print("Facing: {}".format(direction))
         self.head.direction = direction
 
+    def set_previous_direction(self, direction):
+        self.head.prev_direction = direction
+
     def get_direction(self):
         return self.head.direction
+
+    def get_previous_direction(self):
+        return self.head.prev_direction
 
 
 class SnakeHead(Widget):
     """Representation on the 'grid' of the Playground"""
     direction = OptionProperty(
         "Right", options=["Up", "Down", "Left", "Right"])
+    prev_direction = OptionProperty(
+        "Right", options=["Up", "Down", "Left", "Right"])
+
     x_position = NumericProperty(0)
     y_position = NumericProperty(0)
     position = ReferenceListProperty(x_position, y_position)
@@ -227,7 +248,7 @@ class SnakeHead(Widget):
         with self.canvas:
             x = (self.x_position - 1) * self.width
             y = (self.y_position - 1) * self.height
-            coord = (x , y)
+            coord = (x, y)
             size = (self.width, self.height)
 
             if not self.is_on_board():
@@ -241,15 +262,16 @@ class SnakeHead(Widget):
 
     def move(self):
 
-        if self.direction == "Right":
+        if (self.direction == "Right") and (self.prev_direction != "Left"):
             self.x_position += 1
-        elif self.direction == "Left":
+        elif (self.direction == "Left") and (self.prev_direction != "Right"):
             self.x_position -= 1
-        elif self.direction == "Up":
+        elif (self.direction == "Up") and (self.prev_direction != "Down"):
             self.y_position += 1
-        elif self.direction == "Down":
+        elif (self.direction == "Down") and (self.prev_direction != "Up"):
             self.y_position -= 1
 
+        self.prev_direction = self.direction
         self.show()
 
 
