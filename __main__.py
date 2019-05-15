@@ -311,6 +311,37 @@ class Fruit(Widget):
             self.object_on_board = Ellipse(pos=coord, size=self.size)
             self.state = True
 
+class DeathFruit(Widget):
+    # constants used to compute the fruit_rhythm.
+    # TODO: Maybe remove these??
+    duration = NumericProperty(10)
+    interval = NumericProperty(3)
+
+    # Representation on the canvas.
+    object_on_board = ObjectProperty(None)
+    state = BooleanProperty(False)
+
+    def is_on_board(self):
+        return self.state
+
+    def remove(self, *args):
+        if self.is_on_board():
+            self.canvas.remove(self.object_on_board)
+            self.object_on_board = ObjectProperty(None)
+            self.state = False
+
+    def pop(self, pos):
+        self.pos = pos
+
+        with self.canvas:
+            x = (pos[0] - 1) * self.size[0]
+            y = (pos[1] - 1) * self.size[1]
+            coord = (x, y)
+
+            # storing the representation and update the state of the object
+            self.object_on_board = Ellipse(pos=coord, size=self.size)
+            self.state = True
+
 
 class SnakeApp(App):
     game_engine = ObjectProperty(None)
