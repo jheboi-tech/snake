@@ -57,7 +57,18 @@ class Playground(Widget):
     def _keydown(self, *args):
         signature = args[1:3]
         key = self._get_key_press(signature)
-        self.snake.set_direction(key)
+        prev_key = self.snake.get_direction()
+
+        if (key == "Left") and (self.snake.get_previous_direction() != "Right"):
+            self.snake.set_direction(key)
+        elif (key == "Right") and (self.snake.get_previous_direction() != "Left"):
+            self.snake.set_direction(key)
+        elif (key == "Up") and (self.snake.get_previous_direction() != "Down"):
+            self.snake.set_direction(key)
+        elif (key == "Down") and (self.snake.get_previous_direction() != "Up"):
+            self.snake.set_direction(key)
+
+        self.snake.set_previous_direction(prev_key)
 
     def _get_key_press(self, signature):
         if signature == _KEY_UP:
