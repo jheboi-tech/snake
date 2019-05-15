@@ -16,7 +16,7 @@ from kivy.properties import ObjectProperty
 from kivy.properties import NumericProperty, ListProperty
 from kivy.properties import BooleanProperty, OptionProperty
 from kivy.properties import ReferenceListProperty
-from kivy.graphics import Rectangle, Ellipse
+from kivy.graphics import Rectangle, Ellipse, Color
 from kivy.core.window import Window
 
 _INITIAL_LENGTH = 3
@@ -286,6 +286,7 @@ class Fruit(Widget):
     duration = NumericProperty(10)
     interval = NumericProperty(3)
 
+
     # Representation on the canvas.
     object_on_board = ObjectProperty(None)
     state = BooleanProperty(False)
@@ -303,6 +304,7 @@ class Fruit(Widget):
         self.pos = pos
 
         with self.canvas:
+            Color(255, 0, 0)
             x = (pos[0] - 1) * self.size[0]
             y = (pos[1] - 1) * self.size[1]
             coord = (x, y)
