@@ -26,10 +26,11 @@ _KEY_UP = (273, 82)
 _KEY_RIGHT = (275, 79)
 _KEY_DOWN = (274, 81)
 
+
 class Playground(Widget):
     """Children widgets containers."""
     fruit = ObjectProperty(None)
-    death_fruit = ObjectProperty(None)
+    death = ObjectProperty(None)
     snake = ObjectProperty(None)
 
     # Grid Parameters
@@ -128,26 +129,29 @@ class Playground(Widget):
 
         self.death.pop(random_coord)
 
-
     def is_defeated(self):
+        """Checks if all death conditions are met.
+
+        :return:
+        """
         snake_position = self.snake.get_position()
         death_position = self.death.get_position()
+        defeated = False
 
-        if snake_position in self.snake.tail.blocks_positions:
-            return True
+        if snake_position == death_position:
+            defeated = True
+        elif ((snake_position[0] > 0) and (snake_position[0] <= self.col_number)) is False:
+            defeated = True
+        elif ((snake_position[1] > 0) and (snake_position[1] <= self.row_number)) is False:
+            defeated = True
+        else:
+            # Now check if its touching itself.
+            positions = self.snake.get_full_position()
+            for position in positions:
+                if snake_position == position:
+                    defeated = True
 
-        if death_position in self.snake.tail.blocks_positions:
-            return True
-
-        if (
-                (snake_position[0] > self.col_number) or
-                (snake_position[0] < 1) or
-                (snake_position[1] > self.row_number) or
-                (snake_position[1] < 1)
-        ):
-            return True
-
-        return False
+        return defeated
 
     def update(self, *args):
 
@@ -162,6 +166,7 @@ class Playground(Widget):
             if self.snake.get_position() == self.fruit.pos:
                 # if so, remove the fruit and increment score and tail size
                 self.fruit.remove()
+                self.death.remove()
                 self.score += 1
                 self.snake.tail.size += 1
         else:
@@ -231,7 +236,7 @@ class SnakeHead(Widget):
         with self.canvas:
             x = (self.x_position - 1) * self.width
             y = (self.y_position - 1) * self.height
-            coord = (x , y)
+            coord = (x, y)
             size = (self.width, self.height)
 
             if not self.is_on_board():
@@ -309,7 +314,6 @@ class Fruit(Widget):
     duration = NumericProperty(10)
     interval = NumericProperty(3)
 
-
     # Representation on the canvas.
     object_on_board = ObjectProperty(None)
     state = BooleanProperty(False)
@@ -327,7 +331,7 @@ class Fruit(Widget):
         self.pos = pos
 
         with self.canvas:
-            Color(255, 0, 0)
+            Color(0, 255, 0)
             x = (pos[0] - 1) * self.size[0]
             y = (pos[1] - 1) * self.size[1]
             coord = (x, y)
@@ -335,6 +339,7 @@ class Fruit(Widget):
             # storing the representation and update the state of the object
             self.object_on_board = Ellipse(pos=coord, size=self.size)
             self.state = True
+
 
 class DeathFruit(Widget):
     # constants used to compute the fruit_rhythm.
@@ -359,7 +364,7 @@ class DeathFruit(Widget):
         self.pos = pos
 
         with self.canvas:
-            Color (0, 255, 0)
+            Color(255, 0, 0)
             x = (pos[0] - 1) * self.size[0]
             y = (pos[1] - 1) * self.size[1]
             coord = (x, y)
