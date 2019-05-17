@@ -16,7 +16,7 @@ from kivy.properties import ObjectProperty
 from kivy.properties import NumericProperty, ListProperty
 from kivy.properties import BooleanProperty, OptionProperty
 from kivy.properties import ReferenceListProperty
-from kivy.graphics import Rectangle, Ellipse
+from kivy.graphics import Rectangle, Ellipse, Color
 from kivy.core.window import Window
 
 _INITIAL_LENGTH = 3
@@ -35,9 +35,11 @@ _KEY_SPACE = (32, 44)
 
 
 
+
 class Playground(Widget):
     """Children widgets containers."""
     fruit = ObjectProperty(None)
+    death = ObjectProperty(None)
     snake = ObjectProperty(None)
 
     # Speed up
@@ -111,6 +113,7 @@ class Playground(Widget):
 
         self.snake.remove()
         self.fruit.remove()
+        self.death.remove()
 
     def new_snake(self):
         start_coord = (
@@ -141,21 +144,44 @@ class Playground(Widget):
 
         self.fruit.pop(random_coord)
 
+    def pop_death_fruit(self, *args):
+        random_coord = [
+            randint(1, self.col_number), randint(1, self.row_number)
+        ]
+
+        snake_space = self.snake.get_full_position()
+
+        # if the coordinates are on a cell occupied by the snake, re-draw.
+        while random_coord in snake_space:
+            random_coord = [
+                randint(2, self.col_number - 1), randint(2, self.row_number - 1)
+            ]
+
+        self.death.pop(random_coord)
+
     def is_defeated(self):
+        """Checks if all death conditions are met.
+
+        :return:
+        """
         snake_position = self.snake.get_position()
+        death_position = self.death.get_position()
+        defeated = False
 
-        if snake_position in self.snake.tail.blocks_positions:
-            return True
+        if snake_position == death_position:
+            defeated = True
+        elif ((snake_position[0] > 0) and (snake_position[0] <= self.col_number)) is False:
+            defeated = True
+        elif ((snake_position[1] > 0) and (snake_position[1] <= self.row_number)) is False:
+            defeated = True
+        else:
+            # Now check if its touching itself.
+            positions = self.snake.get_full_position()
+            for position in positions:
+                if snake_position == position:
+                    defeated = True
 
-        if (
-                (snake_position[0] > self.col_number) or
-                (snake_position[0] < 1) or
-                (snake_position[1] > self.row_number) or
-                (snake_position[1] < 1)
-        ):
-            return True
-
-        return False
+        return defeated
 
     def update(self, *args):
 
@@ -170,10 +196,12 @@ class Playground(Widget):
             if self.snake.get_position() == self.fruit.pos:
                 # if so, remove the fruit and increment score and tail size
                 self.fruit.remove()
+                self.death.remove()
                 self.score += 1
                 self.snake.tail.size += 1
         else:
             self.pop_fruit()
+            self.pop_death_fruit()
 
         # Increment turn counter.
         self.turn_counter += 1
@@ -344,6 +372,7 @@ class Fruit(Widget):
         self.pos = pos
 
         with self.canvas:
+            Color(0, 255, 0)
             x = (pos[0] - 1) * self.size[0]
             y = (pos[1] - 1) * self.size[1]
             coord = (x, y)
@@ -351,6 +380,42 @@ class Fruit(Widget):
             # storing the representation and update the state of the object
             self.object_on_board = Ellipse(pos=coord, size=self.size)
             self.state = True
+
+
+class DeathFruit(Widget):
+    # constants used to compute the fruit_rhythm.
+    # TODO: Maybe remove these??
+    duration = NumericProperty(10)
+    interval = NumericProperty(3)
+
+    # Representation on the canvas.
+    object_on_board = ObjectProperty(None)
+    state = BooleanProperty(False)
+
+    def is_on_board(self):
+        return self.state
+
+    def remove(self, *args):
+        if self.is_on_board():
+            self.canvas.remove(self.object_on_board)
+            self.object_on_board = ObjectProperty(None)
+            self.state = False
+
+    def pop(self, pos):
+        self.pos = pos
+
+        with self.canvas:
+            Color(255, 0, 0)
+            x = (pos[0] - 1) * self.size[0]
+            y = (pos[1] - 1) * self.size[1]
+            coord = (x, y)
+
+            # storing the representation and update the state of the object
+            self.object_on_board = Ellipse(pos=coord, size=self.size)
+            self.state = True
+
+    def get_position(self):
+        return self.pos
 
 
 class SnakeApp(App):
