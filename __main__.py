@@ -379,7 +379,7 @@ class Fruit(Widget):
             self.object_on_board = Ellipse(pos=coord, size=self.size)
             self.state = True
 
-class DeathFruit(Widget):
+class Death(Widget):
     # constants used to compute the fruit_rhythm.
     # TODO: Maybe remove these??
     duration = NumericProperty(10)
