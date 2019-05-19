@@ -40,7 +40,7 @@ _KEY_SPACE = (32, 44)
 class Playground(Widget):
     """Children widgets containers."""
     fruit = ObjectProperty(None)
-    death_fruit = ObjectProperty(None)
+    death = ObjectProperty(None)
     snake = ObjectProperty(None)
 
     # Speed up
@@ -194,6 +194,7 @@ class Playground(Widget):
             if self.snake.get_position() == self.fruit.pos:
                 # if so, remove the fruit and increment score and tail size
                 self.fruit.remove()
+                self.death.remove()
                 self.score += 1
                 self.snake.tail.size += 1
         else:
