@@ -18,6 +18,7 @@ from kivy.properties import BooleanProperty, OptionProperty
 from kivy.properties import ReferenceListProperty
 from kivy.graphics import Rectangle, Ellipse
 from kivy.core.window import Window
+from kivy.uix.screenmanager import ScreenManager, Screen
 
 _INITIAL_LENGTH = 3
 
@@ -32,6 +33,7 @@ _KEY_UP = (273, 82)
 _KEY_RIGHT = (275, 79)
 _KEY_DOWN = (274, 81)
 _KEY_SPACE = (32, 44)
+
 
 
 
@@ -353,15 +355,29 @@ class Fruit(Widget):
             self.state = True
 
 
-class SnakeApp(App):
+class WelcomeScreen(Screen):
+    pass
+
+
+class PlaygroundScreen(Screen):
     game_engine = ObjectProperty(None)
 
-    def on_start(self):
+    def on_enter(self, *args):
         self.game_engine.start()
 
+
+class SnakeApp(App):
+    screen_manager = ObjectProperty(None)
+
     def build(self):
-        self.game_engine = Playground()
-        return self.game_engine
+        self.screen_manager = ScreenManager()
+
+        ws = WelcomeScreen(name='welcome_screen')
+        ps = PlaygroundScreen(name='playground_screen')
+
+        self.screen_manager.add_widget(ws)
+        self.screen_manager.add_widget(ps)
+        return self.screen_manager
 
 
 if __name__ == '__main__':
