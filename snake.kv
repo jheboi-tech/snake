@@ -53,7 +53,7 @@
 
   BoxLayout:
     orientation: "vertical"
-    size_hint: (0.5, 1)
+    size_hint: (0.7, 0.7)
     spacing: 10
 
     Label:
@@ -63,6 +63,13 @@
       bold: True
       font_size: 50
       padding: 0, 0
+
+    Label:
+      size_hint_y: 0.09
+      text: root.version
+      valign: "bottom"
+      font_size: 30
+      halign: "right"
 
     AnchorLayout:
       anchor_x: "center"
