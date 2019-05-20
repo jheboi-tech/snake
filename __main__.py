@@ -6,14 +6,14 @@ Developed by JHEBOI Tech.
 
 import kivy
 from random import randint
-
+from devinfo import _version
 kivy.require('1.10.1')
 
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.properties import ObjectProperty
-from kivy.properties import NumericProperty, ListProperty
+from kivy.properties import NumericProperty, ListProperty, StringProperty
 from kivy.properties import BooleanProperty, OptionProperty
 from kivy.properties import ReferenceListProperty
 from kivy.graphics import Rectangle, Ellipse, Color
@@ -417,7 +417,11 @@ class Death(Widget):
 
 
 class WelcomeScreen(Screen):
-    pass
+    version = StringProperty()
+
+    def __init__(self, **kwargs):
+        super(Screen, self).__init__(**kwargs)
+        self.version = _version
 
 
 class PlaygroundScreen(Screen):
