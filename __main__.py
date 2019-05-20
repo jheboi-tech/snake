@@ -47,8 +47,8 @@ class Playground(Widget):
     speed_up = BooleanProperty(False)
 
     # Grid Parameters
-    col_number = 100
-    row_number = 100
+    col_number = 50
+    row_number = 50
 
     # Game variables
     score = NumericProperty(0)
