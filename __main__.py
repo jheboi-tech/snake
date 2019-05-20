@@ -6,34 +6,49 @@ Developed by JHEBOI Tech.
 
 import kivy
 from random import randint
-
+from devinfo import _version
 kivy.require('1.10.1')
 
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.properties import ObjectProperty
-from kivy.properties import NumericProperty, ListProperty
+from kivy.properties import NumericProperty, ListProperty, StringProperty
 from kivy.properties import BooleanProperty, OptionProperty
 from kivy.properties import ReferenceListProperty
-from kivy.graphics import Rectangle, Ellipse
+from kivy.graphics import Rectangle, Ellipse, Color
 from kivy.core.window import Window
+from kivy.uix.screenmanager import ScreenManager, Screen
 
 _INITIAL_LENGTH = 3
+
+# In FPS
+_REFRESH_RATE_NORMAL = 5
+_REFRESH_RATE_FAST = 10
+_REFRESH_PERIOD_NORMAL = 1 / _REFRESH_RATE_NORMAL
+_REFRESH_PERIOD_FAST = 1 / _REFRESH_RATE_FAST
 
 _KEY_LEFT = (276, 80)
 _KEY_UP = (273, 82)
 _KEY_RIGHT = (275, 79)
 _KEY_DOWN = (274, 81)
+_KEY_SPACE = (32, 44)
+
+
+
 
 class Playground(Widget):
     """Children widgets containers."""
     fruit = ObjectProperty(None)
+    death = ObjectProperty(None)
     snake = ObjectProperty(None)
 
+    # Speed up
+    speed_up = BooleanProperty(False)
+
     # Grid Parameters
-    col_number = 16
-    row_number = 9
+    col_number = 50
+    row_number = 50
 
     # Game variables
     score = NumericProperty(0)
@@ -51,12 +66,27 @@ class Playground(Widget):
 
     def _keyup(self, *args):
         signature = args[1:3]
-        key = self._get_key_press(signature)
+        if signature == _KEY_SPACE:
+            self.speed_up = False
 
     def _keydown(self, *args):
         signature = args[1:3]
-        key = self._get_key_press(signature)
-        self.snake.set_direction(key)
+        if signature == _KEY_SPACE:
+            self.speed_up = True
+        else:
+            key = self._get_key_press(signature)
+            prev_key = self.snake.get_direction()
+
+            if (key == "Left") and (self.snake.get_previous_direction() != "Right"):
+                self.snake.set_direction(key)
+            elif (key == "Right") and (self.snake.get_previous_direction() != "Left"):
+                self.snake.set_direction(key)
+            elif (key == "Up") and (self.snake.get_previous_direction() != "Down"):
+                self.snake.set_direction(key)
+            elif (key == "Down") and (self.snake.get_previous_direction() != "Up"):
+                self.snake.set_direction(key)
+
+            self.snake.set_previous_direction(prev_key)
 
     def _get_key_press(self, signature):
         if signature == _KEY_UP:
@@ -70,6 +100,8 @@ class Playground(Widget):
         else:
             return ""
 
+
+
     def start(self):
         self.new_snake()
 
@@ -82,6 +114,7 @@ class Playground(Widget):
 
         self.snake.remove()
         self.fruit.remove()
+        self.death.remove()
 
     def new_snake(self):
         start_coord = (
@@ -93,8 +126,9 @@ class Playground(Widget):
         rand_index = randint(0, 3)
         start_direction = ["Up", "Down", "Left", "Right"][rand_index]
 
-        # Set random direction.
+        # Set previous and current direction.
         self.snake.set_direction(start_direction)
+        self.snake.set_previous_direction(start_direction)
 
     def pop_fruit(self, *args):
         random_coord = [
@@ -111,10 +145,30 @@ class Playground(Widget):
 
         self.fruit.pop(random_coord)
 
+    def pop_death_fruit(self, *args):
+        random_coord = [
+            randint(1, self.col_number), randint(1, self.row_number)
+        ]
+
+        snake_space = self.snake.get_full_position()
+
+        # if the coordinates are on a cell occupied by the snake, re-draw.
+        while random_coord in snake_space:
+            random_coord = [
+                randint(2, self.col_number - 1), randint(2, self.row_number - 1)
+            ]
+
+        self.death.pop(random_coord)
+
+
     def is_defeated(self):
         snake_position = self.snake.get_position()
+        death_position = self.death.get_position()
 
         if snake_position in self.snake.tail.blocks_positions:
+            return True
+
+        if death_position in self.snake.tail.blocks_positions:
             return True
 
         if (
@@ -140,15 +194,18 @@ class Playground(Widget):
             if self.snake.get_position() == self.fruit.pos:
                 # if so, remove the fruit and increment score and tail size
                 self.fruit.remove()
+                self.death.remove()
                 self.score += 1
                 self.snake.tail.size += 1
         else:
             self.pop_fruit()
+            self.pop_death_fruit()
 
         # Increment turn counter.
         self.turn_counter += 1
 
-        Clock.schedule_once(self.update, 0.2)
+        # If space bar is pressed, speed up the refresh rate.
+        Clock.schedule_once(self.update, _REFRESH_PERIOD_FAST if self.speed_up else _REFRESH_PERIOD_NORMAL)
 
 
 class Snake(Widget):
@@ -178,14 +235,23 @@ class Snake(Widget):
         print("Facing: {}".format(direction))
         self.head.direction = direction
 
+    def set_previous_direction(self, direction):
+        self.head.prev_direction = direction
+
     def get_direction(self):
         return self.head.direction
+
+    def get_previous_direction(self):
+        return self.head.prev_direction
 
 
 class SnakeHead(Widget):
     """Representation on the 'grid' of the Playground"""
     direction = OptionProperty(
         "Right", options=["Up", "Down", "Left", "Right"])
+    prev_direction = OptionProperty(
+        "Right", options=["Up", "Down", "Left", "Right"])
+
     x_position = NumericProperty(0)
     y_position = NumericProperty(0)
     position = ReferenceListProperty(x_position, y_position)
@@ -208,7 +274,7 @@ class SnakeHead(Widget):
         with self.canvas:
             x = (self.x_position - 1) * self.width
             y = (self.y_position - 1) * self.height
-            coord = (x , y)
+            coord = (x, y)
             size = (self.width, self.height)
 
             if not self.is_on_board():
@@ -222,15 +288,16 @@ class SnakeHead(Widget):
 
     def move(self):
 
-        if self.direction == "Right":
+        if (self.direction == "Right") and (self.prev_direction != "Left"):
             self.x_position += 1
-        elif self.direction == "Left":
+        elif (self.direction == "Left") and (self.prev_direction != "Right"):
             self.x_position -= 1
-        elif self.direction == "Up":
+        elif (self.direction == "Up") and (self.prev_direction != "Down"):
             self.y_position += 1
-        elif self.direction == "Down":
+        elif (self.direction == "Down") and (self.prev_direction != "Up"):
             self.y_position -= 1
 
+        self.prev_direction = self.direction
         self.show()
 
 
@@ -286,6 +353,7 @@ class Fruit(Widget):
     duration = NumericProperty(10)
     interval = NumericProperty(3)
 
+
     # Representation on the canvas.
     object_on_board = ObjectProperty(None)
     state = BooleanProperty(False)
@@ -303,6 +371,7 @@ class Fruit(Widget):
         self.pos = pos
 
         with self.canvas:
+            Color(255, 0, 0)
             x = (pos[0] - 1) * self.size[0]
             y = (pos[1] - 1) * self.size[1]
             coord = (x, y)
@@ -311,16 +380,69 @@ class Fruit(Widget):
             self.object_on_board = Ellipse(pos=coord, size=self.size)
             self.state = True
 
+class Death(Widget):
+    # constants used to compute the fruit_rhythm.
+    # TODO: Maybe remove these??
+    duration = NumericProperty(10)
+    interval = NumericProperty(3)
 
-class SnakeApp(App):
+    # Representation on the canvas.
+    object_on_board = ObjectProperty(None)
+    state = BooleanProperty(False)
+
+    def is_on_board(self):
+        return self.state
+
+    def remove(self, *args):
+        if self.is_on_board():
+            self.canvas.remove(self.object_on_board)
+            self.object_on_board = ObjectProperty(None)
+            self.state = False
+
+    def pop(self, pos):
+        self.pos = pos
+
+        with self.canvas:
+            Color (0, 255, 0)
+            x = (pos[0] - 1) * self.size[0]
+            y = (pos[1] - 1) * self.size[1]
+            coord = (x, y)
+
+            # storing the representation and update the state of the object
+            self.object_on_board = Ellipse(pos=coord, size=self.size)
+            self.state = True
+
+    def get_position(self):
+        return self.pos
+
+
+class WelcomeScreen(Screen):
+    version = StringProperty()
+
+    def __init__(self, **kwargs):
+        super(Screen, self).__init__(**kwargs)
+        self.version = _version
+
+
+class PlaygroundScreen(Screen):
     game_engine = ObjectProperty(None)
 
-    def on_start(self):
+    def on_enter(self, *args):
         self.game_engine.start()
 
+
+class SnakeApp(App):
+    screen_manager = ObjectProperty(None)
+
     def build(self):
-        self.game_engine = Playground()
-        return self.game_engine
+        self.screen_manager = ScreenManager()
+
+        ws = WelcomeScreen(name='welcome_screen')
+        ps = PlaygroundScreen(name='playground_screen')
+
+        self.screen_manager.add_widget(ws)
+        self.screen_manager.add_widget(ps)
+        return self.screen_manager
 
 
 if __name__ == '__main__':
